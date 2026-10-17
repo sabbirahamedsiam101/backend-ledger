@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
+import { ROLE_LIST, ROLES } from "../constants/roles.js";
 const userSchema = new mongoose.Schema(
   {
     name: {
@@ -25,12 +26,11 @@ const userSchema = new mongoose.Schema(
       required: [true, "Password is required"],
       select: false, // Hides password from queries by default for safety
     },
-    // role: {
-    //   type: String,
-    //   enum: ["USER", "LEDGER_AUDITOR", "ADMIN"],
-    //   default: "USER",
-    // },
-    // ,
+    role: {
+      type: String,
+      enum: ROLE_LIST,
+      default: ROLES.USER,
+    },
     systemUser: {
       type: Boolean,
       default: false,
@@ -43,6 +43,10 @@ const userSchema = new mongoose.Schema(
       default: "ACTIVE",
       description:
         "FROZEN stops all financial ledger postings for this user immediately.",
+    },
+    refreshToken: {
+      type: String,
+      select: false, // Never leak this to regular API calls
     },
   },
   { timestamps: true },

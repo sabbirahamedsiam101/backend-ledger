@@ -1,5 +1,13 @@
+import { ROLES } from "../constants/roles.js";
+import mongoose from "mongoose";
 import userModel from "../models/user.model.js";
 import jwt from "jsonwebtoken";
+import {
+  clearRefreshTokenCookie,
+  compareRefreshToken,
+  sendTokenResponse,
+  verifyRefreshToken,
+} from "../utils/jwt.js";
 /**
  * - user register controller
  * - POST /api/auth/register
@@ -22,14 +30,8 @@ const userRegisterController = async (req, res) => {
       password,
     });
 
-    const token = jwt.sign({ id: user._id }, process.env.jwt, {
-      expiresIn: "5d",
-    });
+    const accessToken = await sendTokenResponse(res, user);
 
-    res.cookie("token", token, {
-      httpOnly: true,
-      expires: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
-    });
     res.status(201).json({
       message: "User registered successfully.",
       status: "success",
@@ -37,8 +39,9 @@ const userRegisterController = async (req, res) => {
         _id: user._id,
         name: user.name,
         email: user.email,
+        role: ROLES.USER,
       },
-      token,
+      accessToken,
     });
     console.log("User registered successfully.");
   } catch (error) {
@@ -73,23 +76,25 @@ const userLoginController = async (req, res) => {
       });
     }
 
-    const token = jwt.sign({ id: user._id }, process.env.jwt, {
-      expiresIn: "5d",
-    });
+    if (user.status !== "ACTIVE") {
+      return res.status(403).json({
+        message: "This account is inactive.",
+        status: "failed",
+      });
+    }
 
-    res.cookie("token", token, {
-      httpOnly: true,
-      expires: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
-    });
+    const accessToken = await sendTokenResponse(res, user);
+
     res.status(201).json({
-      message: "User registered successfully.",
+      message: "User Logedin successfully.",
       status: "success",
       data: {
         _id: user._id,
         name: user.name,
         email: user.email,
+        role: user.role,
       },
-      token,
+      accessToken,
     });
   } catch (error) {
     res
@@ -99,4 +104,111 @@ const userLoginController = async (req, res) => {
     console.log(error);
   }
 };
-export default { userRegisterController, userLoginController };
+
+const refreshAccessTokenController = async (req, res) => {
+  const refreshToken = req.cookies?.refreshToken;
+  if (!refreshToken) {
+    return res.status(401).json({
+      status: "error",
+      code: "REFRESH_TOKEN_MISSING",
+      message: "Refresh token is missing.",
+    });
+  }
+
+  let decoded;
+  try {
+    decoded = verifyRefreshToken(refreshToken);
+  } catch (error) {
+    if (
+      error instanceof jwt.JsonWebTokenError ||
+      error instanceof jwt.NotBeforeError
+    ) {
+      clearRefreshTokenCookie(res);
+      return res.status(401).json({
+        status: "error",
+        code: error instanceof jwt.TokenExpiredError
+          ? "REFRESH_TOKEN_EXPIRED"
+          : "INVALID_REFRESH_TOKEN",
+        message: "Refresh token is invalid or expired.",
+      });
+    }
+
+    console.error("Refresh token verification failed:", error);
+    return res.status(500).json({
+      status: "error",
+      message: "Unable to verify refresh token.",
+    });
+  }
+
+  if (
+    !decoded ||
+    typeof decoded !== "object" ||
+    decoded.type !== "refresh" ||
+    typeof decoded.id !== "string" ||
+    !mongoose.Types.ObjectId.isValid(decoded.id)
+  ) {
+    clearRefreshTokenCookie(res);
+    return res.status(401).json({
+      status: "error",
+      code: "INVALID_REFRESH_TOKEN",
+      message: "Refresh token is invalid or expired.",
+    });
+  }
+
+  try {
+    const user = await userModel.findById(decoded.id).select("+refreshToken");
+    if (
+      !user ||
+      user.status !== "ACTIVE" ||
+      !user.refreshToken ||
+      !(await compareRefreshToken(refreshToken, user.refreshToken))
+    ) {
+      clearRefreshTokenCookie(res);
+      return res.status(401).json({
+        status: "error",
+        code: "INVALID_REFRESH_TOKEN",
+        message: "Refresh token is invalid or expired.",
+      });
+    }
+
+    const accessToken = await sendTokenResponse(res, user);
+    return res.status(200).json({
+      status: "success",
+      message: "Access token refreshed successfully.",
+      accessToken,
+    });
+  } catch (error) {
+    console.error("Unable to refresh access token:", error);
+    return res.status(500).json({
+      status: "error",
+      message: "Unable to refresh access token.",
+    });
+  }
+};
+
+const userLogoutController = async (req, res) => {
+  try {
+    await userModel.updateOne(
+      { _id: req.user._id },
+      { $unset: { refreshToken: 1 } },
+    );
+    clearRefreshTokenCookie(res);
+    return res.status(200).json({
+      status: "success",
+      message: "Logged out successfully.",
+    });
+  } catch (error) {
+    console.error("Unable to log out user:", error);
+    return res.status(500).json({
+      status: "error",
+      message: "Unable to log out.",
+    });
+  }
+};
+
+export default {
+  userRegisterController,
+  userLoginController,
+  refreshAccessTokenController,
+  userLogoutController,
+};
