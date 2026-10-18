@@ -1,6 +1,8 @@
 import { ROLES } from "../constants/roles.js";
 import mongoose from "mongoose";
 import userModel from "../models/user.model.js";
+import dotenv from "dotenv";
+dotenv.config();
 import jwt from "jsonwebtoken";
 import {
   clearRefreshTokenCookie,
@@ -8,6 +10,7 @@ import {
   sendTokenResponse,
   verifyRefreshToken,
 } from "../utils/jwt.js";
+import emailService from "../services/email.service.js";
 /**
  * - user register controller
  * - POST /api/auth/register
@@ -43,6 +46,9 @@ const userRegisterController = async (req, res) => {
       },
       accessToken,
     });
+    // Send registration email
+    // await emailService.sendUserRegistrationEmail(user.email, user.name);
+    await emailService.sendUserRegistrationEmail(user.email, user.name);
     console.log("User registered successfully.");
   } catch (error) {
     res
@@ -126,9 +132,10 @@ const refreshAccessTokenController = async (req, res) => {
       clearRefreshTokenCookie(res);
       return res.status(401).json({
         status: "error",
-        code: error instanceof jwt.TokenExpiredError
-          ? "REFRESH_TOKEN_EXPIRED"
-          : "INVALID_REFRESH_TOKEN",
+        code:
+          error instanceof jwt.TokenExpiredError
+            ? "REFRESH_TOKEN_EXPIRED"
+            : "INVALID_REFRESH_TOKEN",
         message: "Refresh token is invalid or expired.",
       });
     }

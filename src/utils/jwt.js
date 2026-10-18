@@ -1,12 +1,15 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
-
+import { env } from '../config/env.js';
 const refreshCookieOptions = () => ({
   httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
-  sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+  secure: env.NODE_ENV === 'production',
+  sameSite: env.NODE_ENV === 'production' ? 'none' : 'lax',
   path: '/api/auth/refresh',
 });
+
+// console.log('JWT_ACCESS_SECRET:', env.JWT_ACCESS_SECRET);
+
 
 const getSecret = (environmentVariable) => {
   const secret = process.env[environmentVariable];
@@ -63,3 +66,5 @@ export const verifyRefreshToken = (token) =>
 
 export const compareRefreshToken = (token, hash) =>
   bcrypt.compare(token, hash);
+
+getSecret('JWT_ACCESS_SECRET');
