@@ -9,5 +9,3 @@ export const ROLES = Object.freeze({
 
 // Extract array values for Mongoose enum and Zod validation lists
 export const ROLE_LIST = Object.values(ROLES); // ['USER', 'LEDGER_AUDITOR', 'ADMIN']
-
-console.log(ROLES.USER)
