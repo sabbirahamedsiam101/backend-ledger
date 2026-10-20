@@ -5,8 +5,15 @@ const router = express.Router();
 
 /*
  * - POST
- * - /api/auth/register
+ * - /api/accounts/create
  * - Create a new Account
  *  */
-router.post("/" , authenticate, accountController.createAccountController);
+router.post("/create", authenticate, accountController.createAccountController);
+
+/*
+ * - POST
+ * - /api/accounts
+ * - All Accounts
+ *  */
+router.get("/", authenticate, accountController.getAllAccountsController); // note: This is a admin api , so we must add the authorization middleware later
 export default router;
