@@ -26,6 +26,6 @@ const accountSchema = new mongoose.Schema(
 
 accountSchema.index({ user: 1, status: 1 });
 
-const Account = mongoose.model("Account", accountSchema);
+const AccountModel = mongoose.model("Account", accountSchema);
 
-export default Account;
+export default AccountModel;
