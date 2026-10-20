@@ -6,6 +6,7 @@ const accountSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: [true, "User is required"],
+      index: true,
     },
     status: {
       type: String,
@@ -22,6 +23,8 @@ const accountSchema = new mongoose.Schema(
   },
   { timestamps: true },
 );
+
+accountSchema.index({ user: 1, status: 1 });
 
 const Account = mongoose.model("Account", accountSchema);
 
