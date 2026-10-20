@@ -1,5 +1,6 @@
 import express from "express";
 import authRouter from "./routers/auth.routers.js";
+import accountRouter from "./routers/account.routes.js";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 dotenv.config();
@@ -10,4 +11,5 @@ app.get("/", (req, res) => {
   res.send("Hello World");
 });
 app.use("/api/auth", authRouter);
+app.use("/api/accounts", accountRouter);
 export default app;
