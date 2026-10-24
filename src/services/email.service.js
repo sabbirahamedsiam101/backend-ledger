@@ -46,5 +46,24 @@ const sendUserRegistrationEmail = async (userEmail, userName) => {
   await sendEmail(userEmail, subject, text, html);
 };
 
+const snedTransetionEmail = async (
+  userEmail,
+  name,
+  ammount,
+  toAccount,
+  transectionDetails,
+) => {
+  const subject = "Transaction Notification";
+  const text = `Hello ${name},\n\nA transaction of amount ${ammount} has been made to account ${toAccount}.\n\nTransaction Details: ${transectionDetails}\n\nBest regards,\nThe Backend-Ledger Team`;
+  const html = `<p>Hello ${name},</p><p>A transaction of amount <strong>${ammount}</strong> has been made to account <strong>${toAccount}</strong>.</p><p>Transaction Details: ${transectionDetails}</p><p>Best regards,<br>The Backend-Ledger Team</p>`;
+  await sendEmail(userEmail, subject, text, html);
+};
+
+const sendTransectionFailedEmail = async (userEmail, name, ammount, toAccount) => {
+  const subject = "Transaction Failed Notification";
+  const text = `Hello ${name},\n\nWe regret to inform you that a transaction of amount ${ammount} to account ${toAccount} has failed.\n\nPlease check your account and try again.\n\nBest regards,\nThe Backend-Ledger Team`;
+  const html = `<p>Hello ${name},</p><p>We regret to inform you that a transaction of amount <strong>${ammount}</strong> to account <strong>${toAccount}</strong> has failed.</p><p>Please check your account and try again.</p><p>Best regards,<br>The Backend-Ledger Team</p>`;
+  await sendEmail(userEmail, subject, text, html);
+}
 // export default sendEmail;
-export default { sendUserRegistrationEmail };
+export default { sendUserRegistrationEmail, snedTransetionEmail };
