@@ -43,7 +43,35 @@ const createTransectionController = async (req, res) => {
   // Step 1: Validate request end
 
   // Step 2: Validate idempotency key start
-  
+  const isTransectionAlreadyExists = await Transection.findOne({
+    idempotencyKey: idempotencyKey,
+  });
+  if (isTransectionAlreadyExists) {
+    if (isTransectionAlreadyExists.status === "COMPLETED") {
+      return res.status(200).json({
+        message: "Transaction already completed",
+        transection: isTransectionAlreadyExists,
+      });
+    }
+    if (isTransectionAlreadyExists.status === "PENDING") {
+      return res.status(200).json({
+        message: "Transaction already pending",
+        transection: isTransectionAlreadyExists,
+      });
+    }
+    if (isTransectionAlreadyExists.status === "REVERSED") {
+      return res.status(200).json({
+        message: "Transection is reversed, please try again",
+        transection: isTransectionAlreadyExists,
+      });
+    }
+    if (isTransectionAlreadyExists.status === "FAILED") {
+      return res.status(200).json({
+        message: "Transaction already failed",
+        transection: isTransectionAlreadyExists,
+      });
+    }
+  }
   // Step 2: Validate idempotency key end
   try {
   } catch (error) {
