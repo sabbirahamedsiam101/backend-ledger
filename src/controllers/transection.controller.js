@@ -73,6 +73,16 @@ const createTransectionController = async (req, res) => {
     }
   }
   // Step 2: Validate idempotency key end
+
+  // Step 3: Check account status start
+  if (fromAccountData.status !== "ACTIVE") {
+    return res.status(400).json({ message: "From Account is not active" });
+  }
+
+  if (toAccountData.status !== "ACTIVE") {
+    return res.status(400).json({ message: "To Account is not active" });
+  }
+  // Step 3: Check account status end
   try {
   } catch (error) {
     console.error("Error creating transaction:", error);
