@@ -1,5 +1,5 @@
 import express from "express";
-import transactionController from "../controllers/transaction.controller.js";
+import transectionController from "../controllers/transection.controller.js";
 const router = express.Router();
 
 /**
@@ -8,6 +8,6 @@ const router = express.Router();
  * - Create a new transection
  */
 
-router.post("/", transactionController.createTransectionController);
+router.post("/", transectionController.createTransectionController);
 
 export default router;
